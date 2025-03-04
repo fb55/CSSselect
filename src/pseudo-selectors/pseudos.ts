@@ -16,6 +16,17 @@ type Pseudo = <Node, ElementNode extends Node>(
  */
 const isDocumentWhiteSpace = /^[ \t\r\n]*$/;
 
+/**
+ * Only text controls can be made read-only, since for other controls (such
+ * as checkboxes and buttons) there is no useful distinction between being
+ * read-only and being disabled.
+ *
+ * @see {@link https://html.spec.whatwg.org/multipage/input.html#attr-input-readonly}
+ */
+
+const readonlyTypePattern =
+    /^(?:text|search|url|tel|email|password|date|month|week|time|datetime-local|number)$/;
+
 // While filters are precompiled, pseudos get called when they are needed
 export const pseudos: Record<string, Pseudo> = {
     empty(elem, { adapter }) {
@@ -103,6 +114,28 @@ export const pseudos: Record<string, Pseudo> = {
             .every(
                 (sibling) => equals(elem, sibling) || !adapter.isTag(sibling),
             );
+    },
+    "read-only"(elem, { adapter }) {
+        const readonly = adapter.hasAttrib(elem, "readonly");
+        if (!readonly) return false;
+
+        const name = adapter.getName(elem);
+        if (name === "textarea") return true;
+        if (name !== "input") return false;
+
+        const type = adapter.getAttributeValue(elem, "type");
+        return !!type && readonlyTypePattern.test(type);
+    },
+    "read-write"(elem, { adapter }) {
+        const readonly = adapter.hasAttrib(elem, "readonly");
+        if (readonly) return false;
+
+        const name = adapter.getName(elem);
+        if (name === "textarea") return true;
+        if (name !== "input") return false;
+
+        const type = adapter.getAttributeValue(elem, "type");
+        return !!type && readonlyTypePattern.test(type);
     },
 };
 

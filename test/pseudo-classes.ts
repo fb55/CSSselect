@@ -200,3 +200,28 @@ describe(":has", () => {
         ).toHaveLength(2);
     });
 });
+
+describe(":read-only and :read-write", () => {
+    it("should match", () => {
+        const dom = parseDocument(`
+            <div>
+                <input type="text" readonly>
+                <input type="text">
+                <input type="color" readonly>
+                <input type="color">
+                <textarea readonly></textarea>
+                <textarea></textarea>
+            </div>
+        `);
+        const readonly = CSSselect.compile(":read-only");
+        const readwrite = CSSselect.compile(":read-write");
+
+        expect(
+            CSSselect.selectAll<AnyNode, Element>(readonly, dom),
+        ).toHaveLength(2);
+
+        expect(
+            CSSselect.selectAll<AnyNode, Element>(readwrite, dom),
+        ).toHaveLength(2);
+    });
+});
